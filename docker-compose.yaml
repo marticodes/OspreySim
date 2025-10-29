@@ -79,6 +79,7 @@ services:
       bash -c "
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic osprey.actions_input --partitions 3 --replication-factor 1 &&
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic osprey.execution_results --partitions 3 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic osprey.actions_input_local --partitions 3 --replication-factor 1 &&
         kafka-topics --bootstrap-server kafka:29092 --list
       "
 
@@ -107,7 +108,7 @@ services:
       - OSPREY_INPUT_STREAM_SOURCE=kafka
       - OSPREY_STDOUT_OUTPUT_SINK=True
       - OSPREY_KAFKA_BOOTSTRAP_SERVERS=["kafka:29092"]
-      - OSPREY_KAFKA_INPUT_STREAM_TOPIC=osprey.actions_input
+      - OSPREY_KAFKA_INPUT_STREAM_TOPIC=osprey.actions_input_local
       # Client ID will default to the machine hostname if it isn't defined
       - OSPREY_KAFKA_INPUT_STREAM_CLIENT_ID=localhost
       - OSPREY_KAFKA_OUTPUT_SINK=True
@@ -231,6 +232,28 @@ services:
     entrypoint:
       - /bin/bash
     command: ["/osprey/example_data/generate_test_data.sh"]
+
+  sqlite_ingestor:
+    image: python:3.11-slim
+    container_name: sqlite_ingestor
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-topic-creator:
+        condition: service_completed_successfully
+    environment:
+      - SQLITE_DB_PATH=/host_db/db.db
+      - SQLITE_TABLE=Post
+      - SQLITE_ID_COLUMN=post_id
+      - SQLITE_TIMESTAMP_COLUMN=timestamp
+      - KAFKA_BROKER=kafka:29092
+      - KAFKA_TOPIC=osprey.actions_input_local
+      - POLL_INTERVAL_SECONDS=1.0
+    volumes:
+      - /Users/marteen/Desktop/Lab/SNS/backend:/host_db:ro
+      - ./ingestion:/app
+    working_dir: /app
+    entrypoint: ["/bin/sh", "-c", "pip install -r requirements.txt && python sqlite_to_kafka.py"]
 
   # DRUID, HERE BE DRAGONS
   postgres:
