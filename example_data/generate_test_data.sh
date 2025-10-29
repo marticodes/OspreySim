@@ -19,7 +19,8 @@ generate_timestamp() {
 action_id=1
 
 # words in post
-words=(hello the quick brown fox jumps over lazy dog and cat runs fast);
+# words=(hello the quick brown fox jumps over lazy dog and cat runs fast);
+words=(hello hi good morning afternoon evening cat dog fox rabbit mouse quick brown lazy jumps runs walks talks plays sings sleeps eats drinks dangerous forbidden spam risky unsafe alert banme);
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 
