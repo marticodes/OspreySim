@@ -8,7 +8,7 @@ from osprey.engine.shared_constants import (
     ENTITY_LABEL_MUTATION_DIMENSION_NAME,
     ENTITY_LABEL_MUTATION_DIMENSION_VALUE,
 )
-from osprey.rpc.labels.v1.service_pb2 import LabelStatus
+from osprey.worker.lib.osprey_shared.labels import LabelStatus
 
 from .entities import EntityT
 from .rules import RuleT, add_slots
@@ -23,7 +23,7 @@ class LabelEffect(EffectToCustomExtractedFeatureBase[List[str]]):
     entity: EntityT[Any]
     """The entity that the effect will be applied on."""
 
-    status: LabelStatus.ValueType
+    status: LabelStatus
     """The status of the label that will be applied by this effect."""
 
     name: str
@@ -32,8 +32,8 @@ class LabelEffect(EffectToCustomExtractedFeatureBase[List[str]]):
     expires_after: Optional[timedelta] = None
     """If set, the label effect has a timed expiration, which means that the reason will expire after this time."""
 
-    delay_action_by: Optional[timedelta] = None
-    """If set, the propagation of the effect to the upstream (if configured) will be delayed.S"""
+    # delay_action_by: Optional[timedelta] = None
+    # """If set, the propagation of the effect to the upstream (if configured via LabelsService.after_add or LabelsService.after_remove) will be delayed."""
 
     dependent_rule: Optional[RuleT] = None
     """If set, the effect will only be applied if the dependent rule evaluates to true."""

@@ -1,28 +1,12 @@
-from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Type
 
 from flask import Request
-from osprey.rpc.labels.v1 import service_pb2
+from osprey.engine.language_types.entities import EntityT
 from osprey.worker.lib.osprey_shared.labels import LabelStatus
 from osprey.worker.ui_api.osprey.lib.druid import TimeseriesDruidQuery
 from osprey.worker.ui_api.osprey.lib.marshal import FlaskRequestMarshaller, T
 from pydantic import BaseModel
-
-
-# This type exists in addition to the pb2 one because pb2 EntityKey cannot be
-# used in pydantic models
-@dataclass
-class EntityKey:
-    id: str
-    type: str
-
-    @classmethod
-    def from_proto(cls, proto: service_pb2.EntityKey):
-        return cls(id=proto.id, type=proto.type)
-
-    def to_proto(self) -> service_pb2.EntityKey:
-        return service_pb2.EntityKey(id=self.id, type=self.type)
 
 
 class EntityMarshaller(FlaskRequestMarshaller):
@@ -36,7 +20,7 @@ class EntityMarshaller(FlaskRequestMarshaller):
 
 
 class GetLabelsForEntityRequest(BaseModel, EntityMarshaller):
-    entity: EntityKey
+    entity: EntityT[str]
 
 
 class EventCountsByFeatureForEntityQuery(TimeseriesDruidQuery, EntityMarshaller):
@@ -51,5 +35,5 @@ class EntityLabelMutation(BaseModel):
 
 
 class ManualEntityLabelMutationRequest(BaseModel, EntityMarshaller):
-    entity: EntityKey
+    entity: EntityT[str]
     mutations: List[EntityLabelMutation]

@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import Dict
 
 from google.cloud.bigtable import Client
+from google.cloud.bigtable.instance import Instance
 from google.cloud.bigtable.table import Table
 from osprey.worker.lib.config import Config
 from osprey.worker.lib.ddtrace_utils import pin_override
@@ -24,6 +25,22 @@ Add new tables to this dict to have them bootstrapped.
 
 
 class BigTableClient(ABC):
+    _gcp_project: str
+    _instance_id: str
+    _admin_enabled: bool
+
+    def _setup_client_instance(self) -> Instance:
+        client = Client(project=self._gcp_project, admin=self._admin_enabled)
+        fix_bigtable_client_if_using_emulator(client)
+
+        return client.instance(self._instance_id)
+
+    @property
+    def _instance(self) -> Instance:
+        if not getattr(self, '__instance', None):
+            self.__instance = self._setup_client_instance()
+        return self.__instance
+
     @abstractmethod
     def init_from_config(self, config: Config) -> None: ...
 
@@ -42,15 +59,9 @@ class OspreyBigTable(BigTableClient):
     def init_from_config(self, config: Config) -> None:
         """Initialize this bigtable client once configuration is available."""
         config = CONFIG.instance()
-        gcp_project = config.get_str('OSPREY_GCP_PROJECT_ID', 'osprey-dev')
-        bigtable_instance = config.get_str('OSPREY_BIGTABLE_INSTANCE_ID', 'osprey-bigtable')
-        bigtable_admin_enabled = config.get_bool('OSPREY_BIGTABLE_ADMIN_ENABLED', True)
-
-        client = Client(project=gcp_project, admin=bigtable_admin_enabled)
-        fix_bigtable_client_if_using_emulator(client)
-
-        instance = client.instance(bigtable_instance)
-        self._instance = instance
+        self._gcp_project = config.get_str('OSPREY_GCP_PROJECT_ID', 'osprey-dev')
+        self._instance_id = config.get_str('OSPREY_BIGTABLE_INSTANCE_ID', 'osprey-bigtable')
+        self._admin_enabled = config.get_bool('OSPREY_BIGTABLE_ADMIN_ENABLED', True)
 
     #  staging/production tables are managed through Terraform
     def bootstrap(self) -> None:
@@ -78,71 +89,4 @@ class OspreyBigTable(BigTableClient):
         return t
 
 
-class DataServicesBigTable(BigTableClient):
-    """
-    A BigTable client wrapper for the data services BigTable instance
-    """
-
-    def __init__(self) -> None:
-        CONFIG.instance().register_configuration_callback(self.init_from_config)
-
-    def init_from_config(self, config: Config) -> None:
-        """Initialize this bigtable client once configuration is available."""
-        config = CONFIG.instance()
-        gcp_project = config.get_str('DATA_SERVICES_GCP_PROJECT_ID', 'osprey-dev')
-        bigtable_instance = config.get_str('DATA_SERVICES_BIGTABLE_INSTANCE_ID', 'derived-sinks-ml-instance-dev')
-        bigtable_admin_enabled = config.get_bool('DATA_SERVICES_BIGTABLE_ADMIN_ENABLED', True)
-
-        client = Client(project=gcp_project, admin=bigtable_admin_enabled)
-        instance = client.instance(bigtable_instance)
-        self._instance = instance
-
-    def table(self, table_name: str) -> Table:
-        """
-        Get a Table instance for the requested table
-        """
-        t = self._instance.table(table_name)
-        pin_override(
-            t,
-            service='osprey-bigtable-client',
-            tags={'bigtable_instance': self._instance.instance_id, 'table_id': t.table_id},
-        )
-        return t
-
-
-class DataStreamBigTable(BigTableClient):
-    """
-    A BigTable client wrapper for the data services BigTable instance
-    Instance: `stream`
-    """
-
-    def __init__(self) -> None:
-        CONFIG.instance().register_configuration_callback(self.init_from_config)
-
-    def init_from_config(self, config: Config) -> None:
-        """Initialize this bigtable client once configuration is available."""
-        config = CONFIG.instance()
-        gcp_project = config.get_str('DATA_GCP_PROJECT_ID', 'osprey-dev')
-        bigtable_instance = config.get_str('DATA_STREAM_BIGTABLE_INSTANCE_ID', 'stream')
-        bigtable_admin_enabled = config.get_bool('DATA_STREAM_BIGTABLE_ADMIN_ENABLED', True)
-
-        client = Client(project=gcp_project, admin=bigtable_admin_enabled)
-        instance = client.instance(bigtable_instance)
-        self._instance = instance
-
-    def table(self, table_name: str) -> Table:
-        """
-        Get a Table instance for the requested table
-        """
-        t = self._instance.table(table_name)
-        pin_override(
-            t,
-            service='osprey-bigtable-client',
-            tags={'bigtable_instance': self._instance.instance_id, 'table_id': t.table_id},
-        )
-        return t
-
-
 osprey_bigtable = OspreyBigTable()
-data_services_bigtable = DataServicesBigTable()
-data_stream_bigtable = DataStreamBigTable()

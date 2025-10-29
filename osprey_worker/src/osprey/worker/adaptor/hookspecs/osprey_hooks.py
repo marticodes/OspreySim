@@ -8,11 +8,13 @@ from osprey.engine.executor.execution_context import Action
 from osprey.engine.udf.base import UDFBase
 from osprey.worker.adaptor.constants import OSPREY_ADAPTOR
 from osprey.worker.lib.action_proto_deserializer import ActionProtoDeserializer
-from osprey.worker.sinks.sink.input_stream import BaseInputStream
+from osprey.worker.lib.storage.labels import LabelsProvider, LabelsServiceBase
 from osprey.worker.sinks.utils.acking_contexts import BaseAckingContext
 
 if TYPE_CHECKING:
     from osprey.worker.lib.config import Config
+    from osprey.worker.lib.storage.stored_execution_result import ExecutionResultStore
+    from osprey.worker.sinks.sink.input_stream import BaseInputStream
     from osprey.worker.sinks.sink.output_sink import BaseOutputSink
 
 hookspec: pluggy.HookspecMarker = pluggy.HookspecMarker(OSPREY_ADAPTOR)
@@ -45,3 +47,17 @@ def register_action_proto_deserializer() -> ActionProtoDeserializer | None:
 @hookspec(firstresult=True)
 def register_input_stream(config: Config) -> BaseInputStream[BaseAckingContext[Action]]:
     raise NotImplementedError('register_input_stream must be implemented by the plugin')
+
+
+@hookspec(firstresult=True)
+def register_execution_result_store(config: Config) -> ExecutionResultStore:
+    """Register an execution result storage backend instance."""
+    raise NotImplementedError('register_execution_result_store must be implemented by the plugin')
+
+
+@hookspec(firstresult=True)
+def register_labels_service_or_provider(config: Config) -> LabelsServiceBase | LabelsProvider:
+    """Register a labels service or labels provider. This can be achieved by implementing a labels
+    service base and utilizing the provided labels provider, or by overriding the labels provider to
+    fit your needs"""
+    raise NotImplementedError('register_labels_service_or_provider must be implemented by the plugin')

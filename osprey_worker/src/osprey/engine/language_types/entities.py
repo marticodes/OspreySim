@@ -36,11 +36,33 @@ class EntityT(OspreyInvariantGeneric[_T], PostExecutionConvertible[_T]):
     def to_post_execution_value(self) -> _T:
         return self.id
 
+    def __str__(self) -> str:
+        return f'{self.type}/{self.id}'
+
+    def __repr__(self) -> str:
+        return f"EntityT[{type(self.id)}](type='{self.type}', id={self.id})"
+
     @staticmethod
     def _internal_post_execution_type(cls: Type['PostExecutionConvertible[_U]']) -> Type[_U]:
         # Since we leave PostExecutionConvertible with a generic variable, override how we determine our type to give
         # the real type. Assumes that this has no subclasses.
         return typing_inspect.get_args(cls)[0]
+
+    @classmethod
+    def __get_validators__(cls):
+        """Pydantic v1 validator"""
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        """Validate and convert to EntityT"""
+        if isinstance(v, cls):
+            return v
+        if isinstance(v, dict):
+            if 'type' in v and 'id' in v:
+                return cls(type=v['type'], id=v['id'])
+            raise TypeError(f'EntityT expects dict with "type" and "id" keys, got {v}')
+        raise TypeError(f'EntityT expected EntityT or dict; got {type(v)}')
 
 
 # Make sure this looks as it's used in the Osprey language when used in error messages.

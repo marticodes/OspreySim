@@ -3,7 +3,7 @@ import logging
 import traceback
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -12,7 +12,6 @@ from typing import (
     Iterable,
     List,
     Mapping,
-    Optional,
     Sequence,
     Set,
     Type,
@@ -26,6 +25,11 @@ from osprey.engine.ast.printer import print_ast
 from osprey.engine.executor.custom_extracted_features import (
     CustomExtractedFeature,
 )
+from osprey.engine.executor.dependency_chain import DependencyChain
+from osprey.engine.executor.execution_graph import ExecutionGraph
+from osprey.engine.executor.external_service_utils import ExternalService, ExternalServiceAccessor, KeyT, ValueT
+from osprey.engine.executor.topological_sorter import TopologicalSorter
+from osprey.engine.executor.udf_execution_helpers import HasHelperInternal, HelperT, UDFHelpers
 from osprey.engine.language_types.effects import (
     EffectBase,
     EffectToCustomExtractedFeatureBase,
@@ -34,14 +38,7 @@ from osprey.engine.language_types.post_execution_convertible import PostExecutio
 from osprey.engine.language_types.verdicts import VerdictEffect
 from osprey.engine.utils.types import add_slots, cached_property
 from osprey.rpc.common.v1.verdicts_pb2 import Verdicts
-from osprey.rpc.labels.v1.service_pb2 import EntityMutation
 from result import Result, UnwrapError
-
-from .dependency_chain import DependencyChain
-from .execution_graph import ExecutionGraph
-from .external_service_utils import ExternalService, ExternalServiceAccessor, KeyT, ValueT
-from .topological_sorter import TopologicalSorter
-from .udf_execution_helpers import HasHelperInternal, HelperT, UDFHelpers
 
 if TYPE_CHECKING:
     from osprey.engine.ast_validator.validation_context import ValidatedSources
@@ -66,13 +63,6 @@ class GeventTimeoutException(Exception):
 
 class ExternalServiceException(Exception):
     """Indicates that an external service call failed or returned unexpected data."""
-
-
-@add_slots
-@dataclass
-class ExtendedEntityMutation:
-    mutation: EntityMutation
-    delay_action_by: Optional[timedelta]
 
 
 class ExecutionContext:

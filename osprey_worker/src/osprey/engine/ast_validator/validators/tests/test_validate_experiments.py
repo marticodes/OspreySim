@@ -1,12 +1,15 @@
 from typing import cast
 
 import pytest
-
-from ....conftest import ExecuteWithResultFunction
-from ....osprey_stdlib.udfs.experiments import CONTROL_BUCKET
-from ..unique_stored_names import UniqueStoredNames
-from ..validate_call_kwargs import ValidateCallKwargs
-from ..validate_experiments import ExperimentValidationResult, ValidateExperiments, ValidateExperimentsResult
+from osprey.engine.ast_validator.validators.unique_stored_names import UniqueStoredNames
+from osprey.engine.ast_validator.validators.validate_call_kwargs import ValidateCallKwargs
+from osprey.engine.ast_validator.validators.validate_experiments import (
+    ExperimentValidationResult,
+    ValidateExperiments,
+    ValidateExperimentsResult,
+)
+from osprey.engine.conftest import ExecuteWithResultFunction
+from osprey.engine.stdlib.udfs.experiments import CONTROL_BUCKET
 
 pytestmark = [
     pytest.mark.use_validators(
@@ -25,8 +28,9 @@ def test_experiment_with_result_json(execute_with_result: ExecuteWithResultFunct
     experiment = f"""
     E1 = Entity(type='MyEntity', id='entity 1')
     A = Experiment(
-        entity=E1, buckets=['{CONTROL_BUCKET}', 'b'], bucket_sizes=[2.5, 2.5], version=1,
-        revision=1, local_bucketing=True
+        entity=E1,
+        buckets=['{CONTROL_BUCKET}', 'b'], bucket_sizes=[2.5, 2.5],
+        version=1, revision=1
     )
     """
     data = execute_with_result(experiment)
@@ -37,8 +41,9 @@ def test_validate_experiment_result(execute_with_result: ExecuteWithResultFuncti
     experiment = f"""
     E1 = Entity(type='MyEntity', id='entity 1')
     A = Experiment(
-        entity=E1, buckets=['{CONTROL_BUCKET}', 'b'], bucket_sizes=[2.5, 2.5], version=1,
-        revision=1, local_bucketing=True
+        entity=E1,
+        buckets=['{CONTROL_BUCKET}', 'b'], bucket_sizes=[2.5, 2.5],
+        version=1, revision=1
     )
     """
     data = execute_with_result(experiment)

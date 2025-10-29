@@ -29,12 +29,12 @@ druid_emitter_logging_logLevel=debug
 
 druid_extensions_loadList=["druid-histogram", "druid-datasketches", "druid-lookups-cached-global", "postgresql-metadata-storage", "druid-multi-stage-query", "druid-kafka-indexing-service"]
 
-druid_zk_service_host=zookeeper
+druid_zk_service_host=druid-zookeeper
 
 druid_metadata_storage_host=
 druid_metadata_storage_type=postgresql
-druid_metadata_storage_connector_connectURI=jdbc:postgresql://postgres:5432/druid
-druid_metadata_storage_connector_user=druid
+druid_metadata_storage_connector_connectURI=jdbc:postgresql://postgres:5432/osprey
+druid_metadata_storage_connector_user=osprey
 druid_metadata_storage_connector_password=FoolishPassword
 
 druid_indexer_runner_javaOptsArray=["-server", "-Xmx1g", "-Xms1g", "-XX:MaxDirectMemorySize=3g", "-Duser.timezone=UTC", "-Dfile.encoding=UTF-8", "-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager"]
@@ -49,3 +49,6 @@ druid_processing_numThreads=2
 druid_processing_numMergeBuffers=2
 
 DRUID_LOG4J=<?xml version="1.0" encoding="UTF-8" ?><Configuration status="WARN"><Appenders><Console name="Console" target="SYSTEM_OUT"><PatternLayout pattern="%d{ISO8601} %p [%t] %c - %m%n"/></Console></Appenders><Loggers><Root level="info"><AppenderRef ref="Console"/></Root><Logger name="org.apache.druid.jetty.RequestLog" additivity="false" level="DEBUG"><AppenderRef ref="Console"/></Logger></Loggers></Configuration>
+
+# 100MB
+druid.coordinator.compaction.config=[{"dataSource":"osprey.execution_results","taskPriority":25,"inputSegmentSizeBytes":100000000}]

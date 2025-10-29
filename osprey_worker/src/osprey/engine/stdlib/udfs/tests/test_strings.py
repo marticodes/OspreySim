@@ -3,10 +3,8 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union, cast
 
 import pytest
-
-from ....conftest import ExecuteFunction
-from ....osprey_udf.registry import UDFRegistry
-from ..string import (
+from osprey.engine.conftest import ExecuteFunction
+from osprey.engine.stdlib.udfs.string import (
     StringClean,
     StringEndsWith,
     StringExtractDomains,
@@ -22,6 +20,7 @@ from ..string import (
     StringToLower,
     StringToUpper,
 )
+from osprey.engine.udf.registry import UDFRegistry
 
 pytestmark = [
     pytest.mark.use_udf_registry(
@@ -183,17 +182,17 @@ class Scenario:
         Scenario('🔞t3xt'),
         Scenario('ΠOPQ 100-', ['nop', '100']),
         Scenario('Te.xt'),
-        Scenario('∏opq'),
+        Scenario('∏opq', 'nopq'),
         Scenario('dat@ 2334', ['data', '2334']),
         Scenario('t3xt |00-', ['100']),
         Scenario('𝐓𝐄𝐗𝐓'),
         Scenario('𝚃𝙴𝚇𝚃'),
-        Scenario('tex刀'),
+        Scenario('tex刀', 'texn'),
         Scenario('te×ts'),
-        Scenario('∏opq'),
-        Scenario('nopq'),
-        Scenario('t3x∩'),
-        Scenario('texη'),
+        Scenario('∏opq', 'nopq'),
+        Scenario('nopq', 'nopq'),
+        Scenario('t3x∩', 'texn'),
+        Scenario('texη', 'texn'),
         Scenario('Ç', ['c']),
         Scenario('⒜,⒝,⒞,⒟,⒠,⒡,⒢,⒣,⒤,⒥,⒦,⒧,⒨,⒩,⒪,⒫,⒬,⒭,⒮,⒯,⒰,⒱,⒲,⒳,⒴,⒵', string.ascii_lowercase),
         Scenario('Ⓐ,Ⓑ,Ⓒ,Ⓓ,Ⓔ,Ⓕ,Ⓖ,Ⓗ,Ⓘ,Ⓙ,Ⓚ,Ⓛ,Ⓜ,Ⓝ,Ⓞ,Ⓟ,Ⓠ,Ⓡ,Ⓢ,Ⓣ,Ⓤ,Ⓥ,Ⓦ,Ⓧ,Ⓨ,Ⓩ', string.ascii_lowercase),

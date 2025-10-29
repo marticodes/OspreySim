@@ -2,11 +2,10 @@ from typing import Dict, Optional
 
 import pytest
 from osprey.engine.ast_validator.validators.validate_call_kwargs import ValidateCallKwargs
-
-from ....conftest import ExecuteFunction
-from ....osprey_udf.registry import UDFRegistry
-from ..email_domain import EmailDomain, EmailSubdomain
-from ..json_data import JsonData
+from osprey.engine.conftest import ExecuteFunction
+from osprey.engine.stdlib.udfs.email_domain import EmailDomain, EmailSubdomain
+from osprey.engine.stdlib.udfs.json_data import JsonData
+from osprey.engine.udf.registry import UDFRegistry
 
 pytestmark = [
     pytest.mark.use_validators([ValidateCallKwargs]),
@@ -53,7 +52,7 @@ def test_accepts_json_data_email_empty(execute: ExecuteFunction) -> None:
         ({'email': 'a'}, None),
         ({'email': 'b@'}, None),
         ({'email': 'b@test@example.org'}, 'example.org'),
-        ({'email': 'd@eXaMpLe.gov'}, 'example.gov'),
+        ({'email': 'd@test.eXaMpLe.gov'}, 'example.gov'),
         ({'email': 'e@me.example.co.uk'}, 'example.co.uk'),
         ({'email': '@example'}, 'example'),
         ({'email': 'blah@test.notarealtld'}, 'test.notarealtld'),
@@ -72,11 +71,11 @@ def test_invalid_email_addresses(
     [
         ({'email': 'a'}, None),
         ({'email': 'b@'}, None),
-        ({'email': 'b@test@example.org'}, 'example.org'),
-        ({'email': 'd@eXaMpLe.gov'}, 'example.gov'),
-        ({'email': 'e@me.example.co.uk'}, 'example.co.uk'),
-        ({'email': '@example'}, 'example'),
-        ({'email': 'blah@test.notarealtld'}, 'test.notarealtld'),
+        ({'email': 'b@test@wow.example.org'}, 'wow.example.org'),
+        ({'email': 'd@wow.eXaMpLe.gov'}, 'wow.example.gov'),
+        ({'email': 'e@me.example.co.uk'}, 'me.example.co.uk'),
+        ({'email': '@user.example'}, 'user.example'),
+        ({'email': 'blah@beep.test.notarealtld'}, 'beep.test.notarealtld'),
     ],
 )
 def test_invalid_email_subdomain_addresses(
